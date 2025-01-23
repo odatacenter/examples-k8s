@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    service: shlink-webclient
+  name: shlink-webclient
+  namespace: shlink
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: shlink-webclient
+  template:
+    metadata:
+      labels:
+        service: shlink-webclient
+    spec:
+      containers:
+        - name: shlink
+          image: shlinkio/shlink-web-client
+          env:
+            - name: SHLINK_SERVER_URL
+              value: https://shlink.example.com
+            - name: SHLINK_SERVER_API_KEY
+              value: "apikey here"
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shlink-webclient
+  namespace: shlink
+  labels:
+    service: shlink-webclient
+spec:
+  type: ClusterIP
+  ports:
+    - name: shlink-webclient
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    service: shlink-webclient

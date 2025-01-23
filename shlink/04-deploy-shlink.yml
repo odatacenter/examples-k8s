@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    service: shlink-shlink
+  name: shlink
+  namespace: shlink
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: shlink-shlink
+  template:
+    metadata:
+      labels:
+        service: shlink-shlink
+    spec:
+      containers:
+        - name: shlink
+          image: shlinkio/shlink:stable
+          env:
+            - name: DB_DRIVER
+              value: postgres
+            - name: DB_HOST
+              value: db.shlink.svc.cluster.local
+            - name: DB_NAME
+              value: shlink
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: secret-env
+                  key: DB_POSTGRESDB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret-env
+                  key: DB_POSTGRESDB_PASSWORD
+            - name: DEFAULT_DOMAIN
+              value: https://shlink.example.com
+            - name: IS_HTTPS_ENABLED
+              value: 'true'
+            #- name: GEOLITE_LICENSE_KEY
+            #  value: ''
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shlink
+  namespace: shlink
+  labels:
+    service: shlink-shlink
+spec:
+  type: ClusterIP
+  ports:
+    - name: shlink
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    service: shlink-shlink
