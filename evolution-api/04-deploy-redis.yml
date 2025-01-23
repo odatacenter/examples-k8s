@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    service: evolution-api-redis
+  name: redis
+  namespace: evolution-api
+spec:
+  serviceName: evolution-api-redis
+  replicas: 1
+  selector:
+    matchLabels:
+      service: evolution-api-redis
+  template:
+    metadata:
+      labels:
+        service: evolution-api-redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:latest
+          command:
+            - redis-server
+          args:
+            - --port 6379
+            - --appendonly yes
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: evolution-api-redis-data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: evolution-api-redis-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: evolution-api
+  labels:
+    service: evolution-api-redis
+spec:
+  clusterIP: None
+  selector:
+    service: evolution-api-redis
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+      protocol: TCP

@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-evolution-api
+  namespace: evolution-api
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100M"
+    #nginx.ingress.kubernetes.io/ssl-passthrough: "false"
+    #nginx.ingress.kubernetes.io/auth-type: basic
+    #nginx.ingress.kubernetes.io/auth-secret: basic-auth
+    #nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
+    # Uncomment next if you use https://cert-manager.io/
+    # cert-manager.io/cluster-issuer: "<YOUR CLUSTER ISSUER>"
+spec:
+  tls:
+  - hosts:
+    - evolution-api.example.com
+  rules:
+    - host: evolution-api.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: evolution-api
+                port:
+                  number: 8080

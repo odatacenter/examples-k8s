@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    service: evolution-api
+  name: evolution-api
+  namespace: evolution-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: evolution-api
+  template:
+    metadata:
+      labels:
+        service: evolution-api
+    spec:
+      containers:
+        - name: evolution-api
+          image: atendai/evolution-api:homolog
+          envFrom:
+            - secretRef:
+                name: secret-env
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - mountPath: /evolution/instances
+              name: evolution-api-instances
+      volumes:
+        - name: evolution-api-instances
+          persistentVolumeClaim:
+            claimName: pvc-evolution-api-instances
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: evolution-api
+  namespace: evolution-api
+  labels:
+    service: evolution-api
+spec:
+  type: ClusterIP
+  ports:
+    - name: evolution-api
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    service: evolution-api

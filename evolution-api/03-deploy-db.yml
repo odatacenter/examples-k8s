@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    service: evolution-api-db
+  name: db
+  namespace: evolution-api
+spec:
+  serviceName: evolution-api-db
+  replicas: 1
+  selector:
+    matchLabels:
+      service: evolution-api-db
+  template:
+    metadata:
+      labels:
+        service: evolution-api-db
+    spec:
+      containers:
+        - image: postgres:15
+          name: postgres
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: evolution-api-db-data
+              mountPath: /var/lib/postgresql/data
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: POSTGRES_DB
+              value: evolution
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: secret-env
+                  key: DB_POSTGRESDB_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret-env
+                  key: DB_POSTGRESDB_PASSWORD
+  volumeClaimTemplates:
+    - metadata:
+        name: evolution-api-db-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  namespace: evolution-api
+  labels:
+    service: evolution-api-db
+spec:
+  clusterIP: None
+  selector:
+    service: evolution-api-db
+  ports:
+    - name: db
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
